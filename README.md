@@ -8,27 +8,39 @@ Base de datos: datosLAPOP.csv
 
 
 2. genero = Género del individuo entrevistado
+   
 Hombre/masculino: 1
+
 Mujer/femenino: 2
+
 No se identifica como hombre ni como mujer: 3
 
 3. percepseg = Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023
+   
 Muy seguro: 1
+
 Algo seguro: 2
+
 Algo inseguro: 3
+
 Muy inseguro: 4
 
 
 4. victima = Víctima del crimen en los últimos 12 meses
+   
 SÍ: 1
+
 NO: 2
 
 
 5. confianzacom = Confianza en la comunidad por parte de ciudadanos peruanos en 2023
 
 Muy confiable: 1
+
 Algo confiable: 2
+
 Poco confiable: 3
+
 Nada confiable: 4
 
 
