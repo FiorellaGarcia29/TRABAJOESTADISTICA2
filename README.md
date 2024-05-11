@@ -2,7 +2,7 @@
 
 Diccionario de datos
 
-Base de datos: datosLAPOP.csv
+Base de datos: dataLAPOP.csv
 
 1. id = Identificador de entrevista
 
@@ -13,7 +13,6 @@ Hombre/masculino: 1
 
 Mujer/femenino: 2
 
-No se identifica como hombre ni como mujer: 3
 
 3. percepseg = Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023
    
@@ -26,7 +25,7 @@ Algo inseguro: 3
 Muy inseguro: 4
 
 
-4. victima = Víctima del crimen en los últimos 12 meses
+4. victima = Ciudadanos peruanos que han sido víctima del crimen en los últimos 12 meses (2023)
    
 SÍ: 1
 
