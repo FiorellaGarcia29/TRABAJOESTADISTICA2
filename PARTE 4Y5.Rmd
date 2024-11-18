@@ -1,0 +1,192 @@
+---
+title: "PARTE 4"
+output: html_document
+date: "2024-11-18"
+---
+
+```{r}
+install.packages("psych")
+install.packages("GPArotation")
+install.packages("readxl")
+```
+
+
+```{r}
+library(psych)
+library(GPArotation)
+library(readxl)
+```
+
+
+VEAMOS SI PODEMOS REALIZAR EL ANÁLISIS FACTORIAL
+```{r}
+# Selección de variables ordinales
+variablesor <- dataf[, c("percepseg", "confianzacom", "confianzapol")]
+
+# Verificar las primeras filas
+head(variablesor)
+```
+
+
+```{r}
+# Matriz de correlación
+cor_matrix <- cor(variablesor, use = "pairwise.complete.obs")
+print(cor_matrix)
+
+# Prueba de esfericidad de Bartlett
+cortest.bartlett(cor_matrix)
+
+# Medida de adecuación muestral KMO
+KMO(cor_matrix)
+
+```
+```{r}
+#Los resultados sugieren que el análisis factorial no es adecuado con estas variables debido al bajo valor de KMO. La baja correlación y la medida de adecuación indican que estas variables no comparten suficientes factores latentes.
+```
+
+ANÁLISIS CON CLUSTER
+```{r}
+install.packages("factoextra")
+install.packages("cluster")
+```
+
+
+```{r}
+install.packages("dendextend")
+```
+
+
+```{r}
+library(readxl)
+library(cluster)
+library(factoextra)
+library(dendextend)
+```
+
+
+```{r}
+#Convertir las variables a formato numérico y seleccionar las variables relevantes
+dataf$estratopri <- as.numeric(dataf$estratopri)
+dataf$ur <- as.numeric(dataf$ur)
+dataf$percepseg <- as.numeric(dataf$percepseg)
+dataf$confianzacom <- as.numeric(dataf$confianzacom)
+dataf$confianzapol <- as.numeric(dataf$confianzapol)
+
+```
+
+
+```{r}
+# Selección de variables para el análisis de clúster
+cluster_data <- dataf[, c("estratopri", "ur", "percepseg", "confianzacom", "confianzapol")]
+```
+
+
+```{r}
+# 3. Estandarizar los datos (opcional pero recomendado)
+scaled_data <- scale(cluster_data)
+```
+
+
+```{r}
+# 4. Calcular el clustering jerárquico usando AGNES con el método de Ward
+agnes_result <- agnes(scaled_data, method = "ward")
+```
+
+
+```{r}
+# 5. Visualizar el dendrograma
+dend <- as.dendrogram(agnes_result)
+dend <- color_branches(dend, k = 3) # Ajusta 'k' para cambiar el número de clústeres
+plot(dend, main = "Dendrograma de Clustering Jerárquico AGNES")
+```
+
+
+```{r}
+# 6. Determinar el número óptimo de clústeres usando el dendrograma
+clusters_agnes <- cutree(agnes_result, k = 3) # Ajusta 'k' según el dendrograma
+table(clusters_agnes)
+```
+
+
+```{r}
+# 7. Añadir los resultados al dataframe original
+dataf$cluster_agnes <- clusters_agnes
+```
+
+
+```{r}
+# Verificar si hay valores NA
+sum(is.na(scaled_data))
+
+```
+
+
+```{r}
+# Eliminar filas con valores NA
+scaled_data <- na.omit(scaled_data)
+```
+
+
+```{r}
+# Verificar si hay valores infinitos
+sum(is.infinite(scaled_data))
+```
+
+```{r}
+cluster_data <- na.omit(cluster_data)
+```
+
+
+```{r}
+agnes_result <- agnes(scaled_data, method = "ward")
+clusters_agnes <- cutree(agnes_result, k = 3)
+
+```
+
+```{r}
+# Verificar que coinciden
+if (nrow(cluster_data) == length(clusters_agnes)) {
+  cluster_data$cluster_agnes <- clusters_agnes
+} else {
+  stop("El número de filas no coincide. Revisa los datos.")
+}
+
+```
+
+
+```{r}
+table(cluster_data$cluster_agnes)
+```
+
+
+```{r}
+# Calcular la matriz de distancias (usando distancia euclidiana)
+distance_matrix <- dist(scaled_data, method = "euclidean")
+```
+
+
+```{r}
+# Calcular la silueta para los clústeres obtenidos
+silhouette_data <- silhouette(cluster_data$cluster_agnes, distance_matrix)
+```
+
+
+```{r}
+# Visualizar el gráfico de silueta
+fviz_silhouette(silhouette_data, print.summary = FALSE)
+```
+
+
+
+```{r}
+#La calidad del agrupamiento es baja, con un promedio de silueta de 0.28, lo que indica que los clústeres formados no están claramente definidos.
+```
+
+
+```{r}
+#CONCLUSIONES
+#En conclusión, la percepción de seguridad de los ciudadanos se ve influida por diversos factores. Entre ellos nuestras hipótesis integraban el factor género de la persona, el factor área geográfica de residencia del entrevistado, el factor zona de residencia del entrevistado, el factor de si ha sido victima de crimen , el factor de confianza en su comunidad y el factor de confianza en la policia nacional. 
+```
+
+
+```{r}

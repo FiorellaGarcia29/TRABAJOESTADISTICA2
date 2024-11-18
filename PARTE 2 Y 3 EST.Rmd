@@ -1,0 +1,364 @@
+---
+title: "PARTE 2 Y 3"
+output: html_document
+date: "2024-11-17"
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+library(rio)
+data = import("dataf.xlsx")
+```
+
+
+
+PARTE 2 ESTADÍSTICOS
+
+CON UR
+
+```{r}
+data$percepsegRE <- factor(data$percepseg, levels = c(1, 2), labels = c("Seguro", "No seguro"))
+
+data$urRE <- factor(data$ur, levels = c(1, 2), labels = c("Urbano", "Rural"))
+
+tabla_contingencia <- table(data$percepsegRE, data$urRE)
+
+# Realizar la prueba de chi-cuadrado
+E1 <- chisq.test(tabla_contingencia)
+
+# Ver los resultados
+E1
+
+```
+El resultado de la prueba de chi-cuadrado con corrección de continuidad de Yates muestra un valor de X-squared extremadamente bajo (9.5608e-31) y un valor p de 1, lo que indica que *no hay evidencia significativa* para rechazar la hipótesis nula. En otras palabras, no existe una relación estadísticamente significativa entre la zona de residencia (`ur`) y la percepción de seguridad (`percepseg`). Esto sugiere que, en el conjunto de datos analizado, la zona de residencia no influye en la percepción de seguridad.
+
+GRÁFICO 
+```{r}
+library(ggplot2)
+grafico <- as.data.frame(tabla_contingencia)
+colnames(grafico) <- c("Percepcion_Seguridad", "Zona_Residencia", "Frecuencia")
+
+# Crear un gráfico de barras
+ggplot(grafico, aes(x = Percepcion_Seguridad, y = Frecuencia, fill = Zona_Residencia)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Relación entre Percepción de Seguridad y Zona de Residencia",
+       x = "Percepción de Seguridad",
+       y = "Frecuencia",
+       fill = "Zona de Residencia") +
+  theme_minimal()
+```
+
+
+CON GENERO 
+
+```{r}
+data$generoRE <- factor(data$genero, levels = c(1, 2), labels = c("Hombre", "Mujer"))
+
+tabla_contingencia2 <- table(data$percepsegRE, data$generoRE)
+
+# Realizar la prueba de chi-cuadrado
+E2 <- chisq.test(tabla_contingencia2)
+
+# Ver los resultados
+E2
+```
+El resultado de la prueba de chi-cuadrado con corrección de continuidad de Yates muestra un **valor p de 0.02488**, lo que es **menor que 0.05**. Esto indica que **hay una relación estadísticamente significativa** entre las dos variables. Por lo tanto, se rechaza la hipótesis nula de independencia, sugiriendo que existe una asociación entre las categorías de las variables en la tabla de contingencia `tabla_contingencia2`.
+
+
+GRÁFICO
+
+```{r}
+
+
+grafico2 <- as.data.frame(tabla_contingencia2)
+colnames(grafico2) <- c("Percepcion_Seguridad", "Genero", "Frecuencia")
+
+# Crear un gráfico de barras
+ggplot(grafico2, aes(x = Percepcion_Seguridad, y = Frecuencia, fill = Genero)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Relación entre Percepción de Seguridad y Género del individuo entrevistado",
+       x = "Percepción de Seguridad",
+       y = "Frecuencia",
+       fill = "Género") +
+  theme_minimal()
+```
+
+CON VICTIMA 
+
+```{r}
+data$victimaRE <- factor(data$victima, levels = c(1, 2), labels = c("SÍ", "NO"))
+
+tabla_contingencia3 <- table(data$percepsegRE, data$victimaRE)
+
+
+E3 <- chisq.test(tabla_contingencia3)
+
+
+E3
+```
+El resultado de la prueba de chi-cuadrado con corrección de continuidad de Yates muestra un **valor p de 1.337e-11**, que es **mucho menor que 0.05**. Esto indica que **hay una relación estadísticamente significativa** entre las dos variables en la tabla de contingencia `tabla_contingencia3`. Por lo tanto, se rechaza la hipótesis nula de independencia, sugiriendo que las variables están asociadas.
+
+GRÁFICO 
+```{r}
+grafico3 <- as.data.frame(tabla_contingencia3)
+colnames(grafico3) <- c("Percepcion_Seguridad", "Victima", "Frecuencia")
+
+# Crear un gráfico de barras apiladas
+ggplot(grafico3, aes(x = Percepcion_Seguridad, y = Frecuencia, fill = Victima)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Relación entre Percepción de Seguridad y Haber Sido Víctima de Crimen",
+       x = "Percepción de Seguridad",
+       y = "Frecuencia",
+       fill = "Víctima") +
+  theme_minimal()
+```
+
+
+
+CON CONFIANZACOM
+```{r}
+library(dplyr)
+data <- data %>%
+  mutate(confianzacom_invertido = case_when(
+    confianzacom == 1 ~ 4,  # Muy confiable -> 4
+    confianzacom == 2 ~ 3,  # Algo confiable -> 3
+    confianzacom == 3 ~ 2,  # Poco confiable -> 2
+    confianzacom == 4 ~ 1   # Nada confiable -> 1
+  ))
+
+tabla_contingencia4 <- table(data$percepsegRE, data$confianzacom_invertido)
+chisq.test(tabla_contingencia4)
+```
+El resultado de la prueba de chi-cuadrado muestra un **valor de X-cuadrado de 137.3** con **3 grados de libertad** y un **p-valor menor a 2.2e-16**, lo que indica que **hay una asociación estadísticamente significativa** entre las variables analizadas. Dado que el p-valor es extremadamente bajo, podemos rechazar la hipótesis nula de independencia, lo que sugiere que las variables están **relacionadas** entre sí.
+
+GRÁFICO 
+```{r}
+ggplot(as.data.frame(tabla_contingencia4), aes(x = Var1, y = Freq, fill = Var2)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Percepción de seguridad", y = "Frecuencia", 
+       title = "Relación entre Percepción de seguridad y Confianza en la comunidad ",
+       fill = "Confianza en la comunidad invertida") +
+  theme_minimal() +
+  scale_fill_manual(values = c("lightblue", "orange", "pink", "green")) 
+```
+
+CON CONFIANZAPOL
+
+```{r}
+tabla_contingencia5 <- table(data$percepsegRE, data$confianzapol)
+chisq.test(tabla_contingencia5)
+```
+El resultado de la prueba de chi-cuadrado muestra un **valor de X-cuadrado de 62.785** con **6 grados de libertad** y un **p-valor de 1.221e-11**, lo que indica una **asociación estadísticamente significativa** entre las variables. Dado que el p-valor es muy bajo, podemos rechazar la hipótesis nula de independencia, sugiriendo que las variables están **fuertemente relacionadas** entre sí.
+
+```{r}
+library(ggplot2)
+ggplot(as.data.frame(tabla_contingencia5), aes(x = Var1, y = Freq, fill = Var2)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Percepción de seguridad", y = "Frecuencia", 
+       title = "Relación entre Percepción de seguridad y Confianza en la policía",
+       fill = "Confianza en la policía") +
+  theme_minimal() +
+  scale_fill_manual(values = c("lightblue", "orange", "pink", "green","yellow", "red", "purple"))
+```
+
+CON ESTRATOPRI 
+
+```{r}
+tabla_contingencia6 <- table(data$percepsegRE, data$estratopri)
+chisq.test(tabla_contingencia6)
+
+```
+El resultado de la *prueba de chi-cuadrado* muestra que no existe una relación significativa entre las variables analizadas. El valor de **X-squared** es 0.27035 con **7 grados de libertad**, y el **p-value** es 0.9999, lo que indica que la probabilidad de observar una diferencia tan grande o más grande entre las frecuencias observadas y esperadas, si las variables fueran independientes, es extremadamente alta. Dado que el **p-value** es mayor que 0.05, no podemos rechazar la hipótesis nula de que las variables son independientes. En resumen, no hay evidencia estadística suficiente para afirmar que exista una relación entre las variables.
+
+```{r}
+df <- as.data.frame(tabla_contingencia6)
+ggplot(df, aes(x = Var1, y = Freq, fill = Var2)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Percepción de Seguridad", y = "Frecuencia", fill = "Área Geográfica") +
+  theme_minimal() +
+  ggtitle("Distribución de la Percepción de Seguridad por Área Geográfica") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+
+PARTE 3
+
+
+```{r}
+library(dplyr)
+
+data <- data %>%
+  mutate(estratopri = case_when(
+    estratopri == 1101 ~ "Costa Norte",
+    estratopri == 1102 ~ "Costa Sur",
+    estratopri == 1103 ~ "Lima Metropolitana",
+    estratopri == 1104 ~ "Selva",
+    estratopri == 1105 ~ "Sierra Centro",
+    estratopri == 1106 ~ "Sierra Norte",
+    estratopri == 1107 ~ "Sierra Sur",
+    TRUE ~ "Desconocido"  # En caso de que haya algún valor inesperado
+  ))
+```
+
+
+CON UR 
+
+H1: La Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023 depende de la Zona de residencia del entrevistado.
+
+```{r}
+data$percepsegRE <- factor(data$percepseg, levels = c(1, 2), labels = c("Seguro", "No seguro"))
+data$urRE <- factor(data$ur, levels = c(1, 2), labels = c("Urbano", "Rural"))
+
+# Ajustar el modelo de regresión logística
+m1 <- glm(percepsegRE ~ urRE, data = data, family = binomial)
+
+# Resumen del modelo
+summary(m1)
+```
+
+Resumen de los resultados:
+El intercepto es estadísticamente significativo, lo que sugiere que, para las personas en zonas urbanas, hay una probabilidad significativa de que su percepción de seguridad esté asociada con el valor base del modelo.
+El coeficiente de urRERural no es significativo, lo que indica que no hay una diferencia estadísticamente significativa en la percepción de seguridad entre las personas que viven en áreas rurales y urbanas.
+La deviance nula es 782.03 y la deviance residual también es 782.03, lo que indica que el modelo no ha mejorado con respecto al modelo nulo (modelo sin predictores), lo que coincide con la falta de significancia de la variable urRE.
+CONCLUSIONES:
+Zona de residencia (urbano vs. rural) no parece tener un impacto significativo sobre la percepción de seguridad en tu conjunto de datos. La variable urRE no es significativa en este modelo de regresión logística.
+
+
+CON UR Y GÉNERO 
+
+H2: La Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023 depende de la Zona de residencia del entrevistado y el Género del individuo entrevistado
+
+```{r}
+data$generoRE <- factor(data$genero, levels = c(1, 2), labels = c("Hombre", "Mujer"))
+```
+
+
+```{r}
+m2 <- glm(percepsegRE ~ urRE + generoRE, data = data, family = binomial)
+summary(m2)
+```
+
+En este modelo de regresión logística, la percepción de seguridad (seguro/no seguro) se relaciona con la zona de residencia (urbano/rural) y el género del encuestado. El género tiene un efecto significativo: ser mujer aumenta las probabilidades de sentirse segura en comparación con ser hombre (coeficiente = 0.45392, p = 0.0201). Por otro lado, la zona de residencia no tiene un efecto significativo en la percepción de seguridad (coeficiente = -0.01021, p = 0.9573). El modelo ajusta ligeramente los datos con un AIC de 782.49.
+
+
+CON UR, GENERO Y VICTIMA 
+
+H3: La Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023 depende de la Zona de residencia del entrevistado, el Género del individuo entrevistado y si los Ciudadanos peruanos que han sido víctima del crimen en los últimos 12 meses (2023).
+
+```{r}
+data$victimaRE <- factor(data$victima, levels = c(1, 2), labels = c("SÍ", "NO"))
+```
+```{r}
+m3 <- glm(percepsegRE ~ urRE + generoRE + victimaRE, data = data, family = binomial)
+summary(m3)
+```
+En este modelo de regresión logística, la percepción de seguridad (seguro/no seguro) se relaciona con la zona de residencia (urbano/rural), el género y si el encuestado fue víctima de un delito. Ser mujer incrementa significativamente las probabilidades de sentirse segura (coeficiente = 0.725, p = 0.00032), mientras que no haber sido víctima de un delito también aumenta significativamente estas probabilidades (coeficiente = -1.975, p < 0.0001). Por otro lado, la zona de residencia no muestra un efecto significativo en la percepción de seguridad (coeficiente = -0.010, p = 0.9576). El modelo mejora el ajuste con un AIC de 721.02.
+
+
+
+CON UR, GENERO, VICTIMA Y CONFIANZACOM
+
+H4: La Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023 depende de la Zona de residencia del entrevistado, el Género del individuo entrevistado, si los Ciudadanos peruanos que han sido víctima del crimen en los últimos 12 meses (2023) y de la confianza en la comunidad por parte de ciudadanos peruanos.
+
+Primero reescalamos las variables 
+
+```{r}
+data <- data %>%
+  mutate(confianzacom_invertido = case_when(
+    confianzacom == 1 ~ 4,  # Muy confiable -> 4
+    confianzacom == 2 ~ 3,  # Algo confiable -> 3
+    confianzacom == 3 ~ 2,  # Poco confiable -> 2
+    confianzacom == 4 ~ 1   # Nada confiable -> 1
+  ))
+```
+
+```{r}
+m4 <- glm(percepsegRE ~ urRE + generoRE + victimaRE + confianzacom_invertido, data = data, family = binomial)
+
+# Ver el resumen del modelo
+summary(m4)
+```
+
+
+CON UR, GENERO, VICTIMA ,CONFIANZACOM Y CONFIANZAPOL 
+
+H5: La Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023 depende de la Zona de residencia del entrevistado, el Género del individuo entrevistado, si los Ciudadanos peruanos que han sido víctima del crimen en los últimos 12 meses (2023), de la confianza en la comunidad por parte de ciudadanos peruanos y la confianza en la policía nacional por parte de ciudadanos peruanos.
+
+```{r}
+m5 <- glm(percepsegRE ~ urRE + generoRE + victimaRE + confianzacom_invertido + confianzapol, data = data, family = binomial)
+
+# Ver el resumen del modelo
+summary(m5)
+```
+En este modelo de regresión logística, la percepción de seguridad en el vecindario está significativamente influenciada por el género, la experiencia de ser víctima de un delito y la confianza en la comunidad. Ser mujer incrementa las probabilidades de sentirse segura (coeficiente = 0.582, p = 0.0076), mientras que no haber sido víctima de un delito (coeficiente = -1.959, p < 0.0001) y una mayor confianza en la comunidad (coeficiente = -1.231, p < 0.0001) están asociadas con una mayor percepción de seguridad. La zona de residencia y la confianza en la policía no muestran efectos significativos en este modelo. El ajuste mejora notablemente, con un AIC de 603.6.
+
+
+CON ESTRATOPRI 
+
+La Percepción de seguridad en el vecindario de ciudadanos peruanos en 2023 depende del área geográfica de residencia del entrevistado.
+
+```{r}
+library(nnet)
+
+
+data$estratopri <- as.factor(data$estratopri)
+
+#percepsegRE es una variable binaria
+
+
+# Ajustar el modelo de regresión logística multinomial
+
+modelo_logit_multinom <- multinom(percepsegRE ~ estratopri, data = data)
+
+summary(modelo_logit_multinom)
+```
+En este modelo de regresión logística multinomial, se analiza la relación entre la percepción de seguridad (percepsegRE) y el área geográfica de residencia (estratopri). Los coeficientes muestran que, en comparación con la categoría base (que no está especificada), la percepción de seguridad no muestra diferencias estadísticamente significativas entre la mayoría de las áreas geográficas, ya que muchos de los valores p de los coeficientes son altos (y las desviaciones estándar son grandes en algunas categorías). Sin embargo, la categoría estratopriDesconocido tiene un coeficiente significativamente alto de 3.96, lo que sugiere que aquellos con un área geográfica desconocida tienen una mayor probabilidad de percibir el vecindario como seguro en comparación con otras áreas. El modelo tiene una devianza residual de 781.65 y un AIC de 797.65, lo que indica un ajuste relativamente aceptable del modelo, pero sin fuertes evidencias de que las áreas geográficas influyan significativamente en la percepción de seguridad.
+
+
+COMPARACIÓN DE MODELOS 
+
+```{r}
+formatoNumero <- function(x) {
+  format(x, digits = 6, scientific = FALSE)
+}
+```
+
+```{r}
+# Librerías necesarias
+library(kableExtra)
+library(modelsummary)
+
+# Definir modelos
+modelsrl <- list(
+  'modelo (1)' = m1,
+  'modelo (2)' = m2,
+  'modelo (3)' = m3,
+  'modelo (4)' = m4,
+  'modelo (5)' = m5
+)
+
+# Definir la función de formato
+formatoNumero <- function(x) {
+  format(x, digits = 6, scientific = FALSE)
+}
+
+# Generar el resumen de modelos
+modelsummary(
+  modelsrl,
+  fmt = formatoNumero,
+  exponentiate = TRUE,
+  statistic = 'conf.int',
+  title = "Comparando modelos",
+  stars = TRUE,
+  gof_map = c("nobs", "aic", "bic", "rmse", "logLik"), # Indicadores de bondad de ajuste
+  gof_omit = c("F"),
+  output = "kableExtra"
+)
+
+```
+
+
+El modelo (5) es el mejor modelo, ya que tiene los valores más bajos de AIC y BIC, además de mantener significativas las principales variables explicativas (géneroREMujer, victimaRENO, confianzacom_invertido). Aunque la variable confianzapol no es significativa, no afecta negativamente el ajuste global del modelo. Por lo tanto, el modelo (5) ofrece la mejor predicción de la percepción de seguridad en el vecindario.
+
+

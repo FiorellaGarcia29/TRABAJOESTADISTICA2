@@ -1,0 +1,307 @@
+---
+title: "ENTREGA3"
+output: html_document
+date: "2024-11-17"
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+library(rio)
+data = import("dataf.xlsx")
+```
+
+VARIABLE DEPENDIENTE PAPARA GRÁFICO
+
+```{r}
+data$percepsegg <- as.factor(data$percepseg)
+levels(data$percepsegg) <- c("Seguro", "No Seguro")
+```
+
+VARIABLES INDEPENDIENTES 
+RECODIFICAMOS
+
+```{r}
+library(car)
+data$confianzacomr <- car::recode(data$confianzacom, "1:2=0 ; 3:4=100")
+table(data$confianzacomr)
+```
+LA PERCEPCIÓN DE SEGURIDAD DE LOS CIUDADANOS AFECTADA POR SU CONFIANZA EN LA COMUNIDAD EN UNA ESCALA DEL 0 AL 100
+
+```{r}
+library(Rmisc)
+G1 <- summarySE(data = data, measurevar = "confianzacomr", groupvar = "percepsegg", na.rm = TRUE)
+G1
+```
+
+
+```{r}
+# Agregar línea de promedio e intervalos de confianza
+library(ggplot2)
+g1 <- ggplot(G1, aes(x = reorder(percepsegg, confianzacomr), y = confianzacomr)) +
+geom_bar(stat = "identity") +
+geom_errorbar(aes(ymin = confianzacomr - ci, ymax = confianzacomr + ci), width = 0.2) +
+coord_flip() +
+labs(title = "Percepción de segurdidad según la confianza en la comunidad",
+subtitle = "LAPOP",
+x = " ",
+y = "Confianza en la comunidad (Escala 0 - 100)") +
+geom_hline(yintercept = mean(data$confianzacomr), linetype = "dashed", color = "blue", size = 1) +
+ylim(0, 80) +
+geom_text(aes(label = paste0(round(confianzacomr, 0), "%")), vjust = 0.5, hjust = -1, color = "black", size = 3)
+
+
+
+library(ggthemes)
+g1 + theme_economist() + ggtitle("Percepción de segurdidad según la confianza en la comunidad")
+```
+
+
+
+GRÁFICO 2
+
+```{r}
+data$confianzapolr <- car::recode(data$confianzapol, "1:4=0 ; 5:7=100")
+table(data$confianzapolr)
+```
+```{r}
+G2 <- summarySE(data = data, measurevar = "confianzapolr", groupvar = "percepsegg", na.rm = TRUE)
+G2
+```
+```{r}
+g2 <- ggplot(G2, aes(x = reorder(percepsegg, confianzapolr), y = confianzapolr)) +
+geom_bar(stat = "identity") +
+geom_errorbar(aes(ymin = confianzapolr - ci, ymax = confianzapolr + ci), width = 0.2) +
+coord_flip() +
+labs(title = "Percepción de segurdidad según la confianza en la policía",
+subtitle = "LAPOP",
+x = " ",
+y = "Confianza en la policía (Escala 0 - 100)") +
+geom_hline(yintercept = mean(data$confianzapolr), linetype = "dashed", color = "blue", size = 1) +
+ylim(0, 80) +
+geom_text(aes(label = paste0(round(confianzapolr, 0), "%")), vjust = 0.5, hjust = -1, color = "black", size = 3)
+
+
+g2 + theme_economist() + ggtitle("Percepción de segurdidad según la confianza en la policía")
+
+
+```
+
+
+
+
+
+GRÁFICO 3 
+
+```{r}
+data$percepsege <- car::recode(data$percepseg, "1=0 ; 2=100")
+table(data$percepsege)
+
+```
+
+
+```{r}
+data$victimag <- as.factor(data$victima)
+levels(data$victimag) <- c("Sí", "No")
+```
+
+```{r}
+G3 <- summarySE(data = data, measurevar = "percepsege", groupvar = "victimag", na.rm = TRUE)
+G3
+```
+
+```{r}
+g3 <- ggplot(G3, aes(x = reorder(victimag, percepsege), y = percepsege)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = percepsege - ci, ymax = percepsege + ci), width = 0.2) +
+  coord_flip() +
+  labs(
+    title = "Percepción de seguridad según si ha sido víctima del crimen en los últimos 12 meses (2023)",
+    subtitle = "LAPOP",
+    x = " ",
+    y = "Percepción de seguridad (0 - 100)"
+  ) +
+  # Ajustar límites dinámicamente
+  scale_y_continuous(
+    limits = c(
+      0, 
+      max(G3$percepsege + G3$ci, na.rm = TRUE)  # Calcula el valor máximo basado en los datos
+    ),
+    expand = expansion(mult = c(0, 0.05))      # Agrega un margen visual superior del 5%
+  ) +
+  geom_hline(
+    yintercept = mean(G3$percepsege, na.rm = TRUE), # Asegúrate de calcular el promedio correctamente
+    linetype = "dashed", color = "blue", size = 1
+  ) +
+  geom_text(
+    aes(label = paste0(round(percepsege, 0), "%")),
+    vjust = 0.5, hjust = -1, color = "black", size = 3
+  ) +
+  theme_economist() +
+  ggtitle("Percepción de seguridad según si ha sido víctima del crimen en los últimos 12 meses (2023)")
+
+g3
+```
+
+
+GÉNERO 
+
+```{r}
+data$generog <- as.factor(data$genero)
+levels(data$generog) <- c("Hombre", "Mujer")
+```
+
+```{r}
+G4 <- summarySE(data = data, measurevar = "percepsege", groupvar = "generog", na.rm = TRUE)
+G4
+```
+
+
+
+```{r}
+g4 <- ggplot(G4, aes(x = reorder(generog, percepsege), y = percepsege)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = percepsege - ci, ymax = percepsege + ci), width = 0.2) +
+  coord_flip() +
+  labs(
+    title = "Percepción de seguridad según género",
+    subtitle = "LAPOP",
+    x = " ",
+    y = "Percepción de seguridad (Escala 0 - 100)"
+  ) +
+  # Ajustar límites dinámicamente
+  scale_y_continuous(
+    limits = c(0, max(G4$percepsege + G4$ci, na.rm = TRUE)), # Incluye los intervalos superiores
+    expand = expansion(mult = c(0, 0.05))                   # Agrega un margen visual
+  ) +
+  geom_hline(
+    yintercept = mean(G4$percepsege, na.rm = TRUE),          # Promedio de percepsege
+    linetype = "dashed", color = "blue", size = 1
+  ) +
+  geom_text(
+    aes(label = paste0(round(percepsege, 0), "%")),
+    vjust = 0.5, hjust = -1, color = "black", size = 3
+  )
+
+
+
+g4 + theme_economist() + ggtitle("Percepción de seguridad según género")
+
+```
+
+VARIABLE UR 
+
+```{r}
+data$urg <- as.factor(data$ur)
+levels(data$urg) <- c("Urbano", "Rural")
+```
+
+```{r}
+G5 <- summarySE(data = data, measurevar = "percepsege", groupvar = "urg", na.rm = TRUE)
+G5
+```
+
+
+```{r}
+g5 <- ggplot(G5, aes(x = reorder(urg, percepsege), y = percepsege)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(
+    aes(ymin = percepsege - ci, ymax = percepsege + ci), 
+    width = 0.2
+  ) +
+  coord_flip() +
+  labs(
+    title = "Percepción de seguridad según zona",
+    subtitle = "LAPOP",
+    x = " ",
+    y = "Percepción de seguridad (Escala 0 - 100)"
+  ) +
+  # Ajustar límites dinámicamente
+  scale_y_continuous(
+    limits = c(
+      0, 
+      max(G5$percepsege + G5$ci, na.rm = TRUE)  # Límite superior dinámico
+    ),
+    expand = expansion(mult = c(0, 0.05))      # Margen adicional del 5%
+  ) +
+  geom_hline(
+    yintercept = mean(G5$percepsege, na.rm = TRUE), # Promedio dinámico
+    linetype = "dashed", color = "blue", size = 1
+  ) +
+  geom_text(
+    aes(label = paste0(round(percepsege, 0), "%")),
+    vjust = 0.5, hjust = -1, color = "black", size = 3
+  ) +
+  theme_economist() +
+  ggtitle("Percepción de seguridad según zona")
+
+g5
+
+```
+ 
+
+VARIABLE ESTRATOPRI 
+
+```{r}
+library(dplyr)
+
+data <- data %>%
+  mutate(estratopri = case_when(
+    estratopri == 1101 ~ "Costa Norte",
+    estratopri == 1102 ~ "Costa Sur",
+    estratopri == 1103 ~ "Lima Metropolitana",
+    estratopri == 1104 ~ "Selva",
+    estratopri == 1105 ~ "Sierra Centro",
+    estratopri == 1106 ~ "Sierra Norte",
+    estratopri == 1107 ~ "Sierra Sur",
+    TRUE ~ "Desconocido"  # En caso de que haya algún valor inesperado
+  ))
+```
+
+
+```{r}
+data$estratopri <- as.factor(data$estratopri)
+```
+```{r}
+str(data$estratopri)
+```
+
+
+```{r}
+G6 <- summarySE(data = data, measurevar = "percepsege", groupvar = "estratopri", na.rm = TRUE)
+G6
+```
+
+```{r}
+# Filtrar NA y valores fuera de rango
+G6_clean <- G6 %>%
+  filter(!is.na(percepsege) & !is.na(ci) & !is.na(estratopri)) %>%
+  filter(percepsege >= 0 & percepsege <= 100)
+
+# Graficar
+g6 <- ggplot(G6_clean, aes(x = reorder(estratopri, percepsege), y = percepsege)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = percepsege - ci, ymax = percepsege + ci), width = 0.2) +
+  coord_flip() +
+  labs(
+    title = "Percepción de seguridad según el Área geográfica de residencia del entrevistado",
+    subtitle = "LAPOP",
+    x = " ",
+    y = "Confianza en la comunidad (Escala 0 - 100)"
+  ) +
+  scale_y_continuous(
+    limits = c(0, max(G6_clean$percepsege + G6_clean$ci, na.rm = TRUE)),  
+    expand = expansion(mult = c(0, 0.05))  
+  ) +
+  geom_hline(
+    yintercept = mean(G6_clean$percepsege, na.rm = TRUE), 
+    linetype = "dashed", color = "blue", size = 1
+  ) +
+  geom_text(aes(label = paste0(round(percepsege, 0), "%")), 
+            vjust = 0.5, hjust = -1, color = "black", size = 3) +
+  theme_economist() +
+  ggtitle("Percepción de seguridad según el Área geográfica de residencia del entrevistado")
+
+g6
+
+```
+
